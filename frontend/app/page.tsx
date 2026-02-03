@@ -1,84 +1,94 @@
 import Navbar from '@/components/Navbar';
-import { ArrowRight, BarChart3, Cpu, Zap, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, BarChart, Database, Lock, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LandingPage() {
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-500/10 blur-[120px] rounded-full -z-10" />
-        
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-sm font-bold mb-8 animate-fade-in">
-            <Zap size={16} /> Ready for Banking Production v2.0
+      <section className="relative pt-40 pb-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 text-[12px] font-medium uppercase tracking-widest mb-8">
+            <Info size={14} /> Certified Banking Solution v2.0
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
-            Predict Your Next <br /> High-Value Customer.
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-8 text-white">
+            Operational Intelligence for <br />
+            Term Deposit Conversion.
           </h1>
           
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-            Optimalkan strategi sales perbankan Anda dengan Lead Scoring berbasis AI. 
-            Identifikasi nasabah potensial secara akurat sebelum melakukan panggilan.
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            Sistem manajemen prospek berbasis data yang dirancang untuk mengoptimalkan kampanye pemasaran perbankan melalui validasi metodologi Machine Learning yang ketat.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all transform hover:scale-105">
-              Get Started Now <ArrowRight size={20} />
+            <Link href="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-md text-sm font-semibold transition-all">
+              Sistem Login <ArrowRight size={18} />
             </Link>
-            <Link href="/docs" className="w-full sm:w-auto border border-white/10 hover:bg-white/5 px-10 py-4 rounded-xl text-lg font-bold transition-all">
-              Read Documentation
+            <Link href="/docs" className="w-full sm:w-auto border border-slate-700 hover:bg-slate-900 px-8 py-3 rounded-md text-sm font-semibold transition-all">
+              Panduan Pengguna
             </Link>
           </div>
         </div>
       </section>
 
-      {/* --- VALUE PROPOSITION --- */}
-      <section className="py-20 px-6 bg-white/[0.02] border-y border-white/5">
+      {/* --- CORE CAPABILITIES --- */}
+      <section className="py-20 px-6 border-t border-slate-900 bg-slate-900/30">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-8">
             
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-400">
-                <BarChart3 size={28} />
-              </div>
-              <h3 className="text-xl font-bold">Predictive Intelligence</h3>
-              <p className="text-gray-400 leading-relaxed text-sm">
-                Menggunakan algoritma XGBoost yang divalidasi ketat untuk memberikan skor probabilitas 0-100% pada setiap calon nasabah.
+            {/* Feature 1 */}
+            <div className="p-8 border border-slate-800 rounded-lg bg-slate-950">
+              <BarChart className="text-emerald-500 mb-6" size={32} />
+              <h3 className="text-lg font-bold mb-3">Predictive Validation</h3>
+              <p className="text-slate-400 leading-relaxed text-sm font-light">
+                Model klasifikasi XGBoost yang telah dimitigasi dari risiko data leakage, memastikan prediksi akurat sebelum kontak dilakukan.
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-400">
-                <Cpu size={28} />
-              </div>
-              <h3 className="text-xl font-bold">Explainable AI (XAI)</h3>
-              <p className="text-gray-400 leading-relaxed text-sm">
-                Bukan sekadar angka. Kami memberikan alasan (SHAP Values) di balik setiap prediksi untuk membangun kepercayaan tim sales.
+            {/* Feature 2 */}
+            <div className="p-8 border border-slate-800 rounded-lg bg-slate-950">
+              <Database className="text-emerald-500 mb-6" size={32} />
+              <h3 className="text-lg font-bold mb-3">System Architecture</h3>
+              <p className="text-slate-400 leading-relaxed text-sm font-light">
+                Arsitektur terpisah (Decoupled) menggunakan FastAPI dan Next.js untuk performa tinggi, keamanan data, dan skalabilitas sistem.
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center text-purple-400">
-                <CheckCircle2 size={28} />
-              </div>
-              <h3 className="text-xl font-bold">Enterprise Ready</h3>
-              <p className="text-gray-400 leading-relaxed text-sm">
-                Arsitektur Fullstack modern (FastAPI & Next.js) dengan keamanan JWT, siap menangani pemrosesan data massal secara instan.
+            {/* Feature 3 */}
+            <div className="p-8 border border-slate-800 rounded-lg bg-slate-950">
+              <Lock className="text-emerald-500 mb-6" size={32} />
+              <h3 className="text-lg font-bold mb-3">Enterprise Security</h3>
+              <p className="text-slate-400 leading-relaxed text-sm font-light">
+                Otentikasi berbasis JSON Web Token (JWT) dengan enkripsi tingkat lanjut untuk melindungi kerahasiaan data nasabah perbankan.
               </p>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* --- TECHNICAL SPECS --- */}
+      <section className="py-16 px-6 text-center">
+        <div className="max-w-2xl mx-auto border border-slate-800 p-6 rounded-lg bg-slate-900/20">
+          <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-4">Integrasi Teknologi</p>
+          <div className="flex flex-wrap justify-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+             <span className="font-bold text-lg">FASTAPI</span>
+             <span className="font-bold text-lg">NEXT.JS</span>
+             <span className="font-bold text-lg">XGBOOST</span>
+             <span className="font-bold text-lg">SHAP</span>
+             <span className="font-bold text-lg">POSTGRESQL</span>
           </div>
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="mt-auto py-12 px-6 border-t border-white/5 text-center">
-        <p className="text-gray-500 text-sm font-medium">
-          © 2026 SmartConvert CRM. Developed by Ryan Besto Saragih.
+      <footer className="mt-auto py-10 px-6 border-t border-slate-900 text-center">
+        <p className="text-slate-600 text-[12px] tracking-wide">
+          SMARTCONVERT CRM &copy; 2026. <br />
+          TECHNICAL INFRASTRUCTURE BY RYAN BESTO SARAGIH.
         </p>
       </footer>
     </main>
