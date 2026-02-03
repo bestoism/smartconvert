@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* --- Kustomisasi Variabel Tema --- */
+@theme {
+  --color-background-start: rgb(10, 15, 30);
+  --color-background-end: rgb(0, 0, 0);
+  --color-foreground: rgb(255, 255, 255);
+}
+
+/* --- Global Styles --- */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  color: var(--color-foreground);
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--color-background-end)
+    )
+    var(--color-background-start);
+  min-height: 100vh;
+}
+
+/* Biar transisi smooth antar halaman */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+}
