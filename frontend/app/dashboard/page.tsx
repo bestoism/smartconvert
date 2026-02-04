@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Users, TrendingUp, Activity, AlertCircle, PieChart as PieIcon, BarChart3, Globe } from 'lucide-react';
+import { 
+  Users, 
+  TrendingUp, 
+  Activity, 
+  AlertCircle, 
+  BarChart3, 
+  Globe, 
+  RefreshCw, 
+  Table as TableIcon,
+  PieChart as PieIcon // Alias ditambahkan di sini untuk ikon
+} from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   Cell, CartesianGrid, PieChart, Pie, Legend
@@ -27,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// --- Komponen Stat Card ---
+// --- Komponen Stat Card (Top Row) ---
 function StatCard({ label, value, icon: Icon, colorClass, help }: any) {
   return (
     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all group">
@@ -45,9 +55,71 @@ function StatCard({ label, value, icon: Icon, colorClass, help }: any) {
   );
 }
 
+// --- Komponen Flippable Chart Card ---
+function FlippableCard({ title, icon: Icon, description, children, dataView, isFlipped, onToggle, colorClass }: any) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl relative group transition-all duration-300">
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h4 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
+            <Icon size={16} className={colorClass}/> {title}
+          </h4>
+          <p className="text-xs text-slate-500 font-light">{description}</p>
+        </div>
+        <button 
+          onClick={onToggle}
+          className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
+          title="Toggle View"
+        >
+          {isFlipped ? <BarChart3 size={16} /> : <TableIcon size={16} />}
+        </button>
+      </div>
+
+      <div className="h-[300px] w-full flex items-center justify-center">
+        {!isFlipped ? (
+          <div className="w-full h-full animate-in fade-in duration-500">
+            {children}
+          </div>
+        ) : (
+          <div className="w-full h-full overflow-y-auto animate-in zoom-in-95 duration-300 pr-2">
+            <table className="w-full text-left">
+              <thead className="sticky top-0 bg-slate-900">
+                <tr className="border-b border-slate-800">
+                  <th className="py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kategori</th>
+                  <th className="py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Leads</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {dataView?.map((item: any, idx: number) => (
+                  <tr key={idx} className="hover:bg-white/[0.02]">
+                    <td className="py-3 text-xs text-slate-300 capitalize">{item.name || item.job}</td>
+                    <td className="py-3 text-xs font-mono font-bold text-emerald-400 text-right">{item.value?.toLocaleString() || item.count?.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  const [flipped, setFlipped] = useState<any>({
+    score: false,
+    job: false,
+    age: false,
+    edu: false,
+    marital: false
+  });
+
+  const toggleFlip = (key: string) => {
+    setFlipped((prev: any) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -93,120 +165,122 @@ export default function DashboardPage() {
         <StatCard label="Total Leads" value={stats?.total_leads} icon={Users} colorClass="text-blue-400" />
         <StatCard label="High Potential" value={stats?.high_potential} help="Ready to call" icon={TrendingUp} colorClass="text-emerald-400" />
         <StatCard label="Medium Potential" value={stats?.medium_potential} icon={Activity} colorClass="text-yellow-400" />
-        <StatCard label="Conversion Est." value={`${stats?.conversion_rate_estimate}%`} help="Based on AI Score" icon={AlertCircle} colorClass="text-purple-400" />
+        <StatCard label="Low Potential" value={stats?.low_potential} help="Lowest priority" icon={AlertCircle} colorClass="text-rose-400" />
       </div>
 
       {/* 2. MAIN ANALYTICS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Confidence Score */}
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl">
-          <h4 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
-            <TrendingUp size={16} className="text-emerald-500"/> AI Confidence Score
-          </h4>
-          <p className="text-xs text-slate-500 font-light mb-8">Probability distribution for the entire population.</p>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer>
-              <BarChart data={stats?.score_dist || []}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10}} dy={10} />
-                <YAxis hide />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff', opacity: 0.05}} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
-                  {(stats?.score_dist || []).map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={index >= 3 ? '#10b981' : '#3b82f6'} fillOpacity={0.8} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <FlippableCard 
+          title="AI Confidence Score"
+          icon={TrendingUp}
+          colorClass="text-emerald-500"
+          description="Probability distribution for the entire population."
+          isFlipped={flipped.score}
+          onToggle={() => toggleFlip('score')}
+          dataView={stats?.score_dist}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stats?.score_dist || []}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10}} dy={10} />
+              <YAxis hide />
+              <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff', opacity: 0.05}} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                {(stats?.score_dist || []).map((entry: any, index: number) => (
+                  <Cell key={`cell-${index}`} fill={index >= 3 ? '#10b981' : '#3b82f6'} fillOpacity={0.8} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </FlippableCard>
 
-        {/* Job Distribution */}
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl">
-          <h4 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
-            <BarChart3 size={16} className="text-blue-500"/> Job Distribution
-          </h4>
-          <p className="text-xs text-slate-500 font-light mb-8">Top performing professional categories.</p>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer>
-              <BarChart data={stats?.job_dist || []} layout="vertical">
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} width={100} />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff', opacity: 0.05}} />
-                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} fillOpacity={0.6} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <FlippableCard 
+          title="Job Distribution"
+          icon={BarChart3}
+          colorClass="text-blue-500"
+          description="Top performing professional categories."
+          isFlipped={flipped.job}
+          onToggle={() => toggleFlip('job')}
+          dataView={stats?.job_dist}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stats?.job_dist || []} layout="vertical">
+              <XAxis type="number" hide />
+              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} width={100} />
+              <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff', opacity: 0.05}} />
+              <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} fillOpacity={0.6} />
+            </BarChart>
+          </ResponsiveContainer>
+        </FlippableCard>
       </div>
 
       {/* 3. DEMOGRAPHICS ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Age Groups */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-widest text-slate-400">Age Groups</h4>
-          <div className="h-[250px]">
-            <ResponsiveContainer>
-              <BarChart data={stats?.age_dist || []}>
-                <XAxis dataKey="name" tick={{fontSize: 9, fill:'#64748b'}} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#F59E0B" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <FlippableCard 
+          title="Age Groups"
+          icon={Users}
+          colorClass="text-amber-500"
+          description="Population by age bracket."
+          isFlipped={flipped.age}
+          onToggle={() => toggleFlip('age')}
+          dataView={stats?.age_dist}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stats?.age_dist || []}>
+              <XAxis dataKey="name" tick={{fontSize: 9, fill:'#64748b'}} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#F59E0B" radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </FlippableCard>
 
-        {/* Education Level */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center">
-          <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-widest text-slate-400">Education Level</h4>
-          <div className="h-[250px]">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie 
-                    data={stats?.edu_dist || []} 
-                    dataKey="value" 
-                    innerRadius={50} 
-                    outerRadius={70} 
-                    paddingAngle={5}
-                >
-                  {(stats?.edu_dist || []).map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS_PALE[index % COLORS_PALE.length]} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '10px'}} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <FlippableCard 
+          title="Education"
+          icon={PieIcon} // Ikon alias digunakan di sini
+          colorClass="text-purple-500"
+          description="Lead count by education level."
+          isFlipped={flipped.edu}
+          onToggle={() => toggleFlip('edu')}
+          dataView={stats?.edu_dist}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={stats?.edu_dist || []} dataKey="value" innerRadius={50} outerRadius={70} paddingAngle={5}>
+                {(stats?.edu_dist || []).map((entry: any, index: number) => (
+                  <Cell key={`cell-${index}`} fill={COLORS_PALE[index % COLORS_PALE.length]} stroke="none" />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '10px'}} />
+            </PieChart>
+          </ResponsiveContainer>
+        </FlippableCard>
 
-        {/* Marital Status */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center">
-          <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-widest text-slate-400">Marital Status</h4>
-          <div className="h-[250px]">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie 
-                    data={stats?.marital_dist || []} 
-                    dataKey="value" 
-                    innerRadius={50} 
-                    outerRadius={70} 
-                    paddingAngle={5}
-                >
-                  {(stats?.marital_dist || []).map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS_STATUS[index % COLORS_STATUS.length]} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '10px'}} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <FlippableCard 
+          title="Marital Status"
+          icon={Activity}
+          colorClass="text-pink-500"
+          description="Lead distribution by status."
+          isFlipped={flipped.marital}
+          onToggle={() => toggleFlip('marital')}
+          dataView={stats?.marital_dist}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={stats?.marital_dist || []} dataKey="value" innerRadius={50} outerRadius={70} paddingAngle={5}>
+                {(stats?.marital_dist || []).map((entry: any, index: number) => (
+                  <Cell key={`cell-${index}`} fill={COLORS_STATUS[index % COLORS_STATUS.length]} stroke="none" />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '10px'}} />
+            </PieChart>
+          </ResponsiveContainer>
+        </FlippableCard>
       </div>
 
       {/* 4. ECONOMIC CONTEXT SUMMARY */}
-      <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl border-t-4 border-t-orange-500">
+      <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl border-t-4 border-t-orange-500 shadow-xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h4 className="text-white font-bold text-sm flex items-center gap-2">
@@ -216,7 +290,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-10">
             {stats?.econ_dist?.map((item: any) => (
-              <div key={item.name}>
+              <div key={item.name} className="animate-in fade-in duration-1000">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{item.name}</p>
                 <p className="text-2xl font-bold text-orange-400">{item.value.toLocaleString()}</p>
               </div>

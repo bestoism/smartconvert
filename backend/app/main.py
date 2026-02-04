@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import pandas as pd
 import io
 
@@ -28,12 +28,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --- KONFIGURASI CORS (PENTING BUAT REACT) ---
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-
+# --- KONFIGURASI CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,7 +36,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# ---------------------------------------------
+
+# Tambahkan Schema sederhana untuk request body bulk actions
+class BulkActionRequest(schemas.BaseModel):
+    lead_ids: List[int]
+    status: Optional[str] = None
 
 @app.get("/")
 def read_root():
@@ -53,7 +52,6 @@ def read_root():
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/login")
 
-# --- FUNGSI BARU: CEK SIAPA YANG LOGIN ---
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
@@ -105,7 +103,6 @@ async def upload_leads_csv(
         results = []
         for _, row in df.iterrows():
             lead_data_raw = row.to_dict()
-
             prediction = ml_service.predict(lead_data_raw)
 
             lead_data_for_db = {}
@@ -131,17 +128,29 @@ async def upload_leads_csv(
         raise HTTPException(status_code=500, detail=f"Error processing CSV: {str(e)}")
 
 # =====================================================
-# LEADS
+# LEADS (WITH ENHANCED FILTERING & PAGINATION INFO)
 # =====================================================
 
-@app.get("/api/v1/leads", response_model=List[schemas.LeadResponse])
+@app.get("/api/v1/leads")
 def read_leads(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = 0, 
+    limit: int = 100, 
     sort_by: str = "newest",
+    job: Optional[str] = None, 
+    min_age: Optional[int] = None, 
+    max_age: Optional[int] = None, 
+    min_score: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    return crud.get_leads(db, skip=skip, limit=limit, sort_by=sort_by)
+    """
+    Mengambil daftar leads dengan dukungan filter dan pagination info.
+    """
+    total, data = crud.get_leads(
+        db, skip=skip, limit=limit, sort_by=sort_by, 
+        job=job, min_age=min_age, max_age=max_age, min_score=min_score
+    )
+    
+    return {"total_found": total, "data": data}
 
 
 @app.get("/api/v1/leads/{lead_id}", response_model=schemas.LeadResponse)
@@ -158,18 +167,62 @@ def read_lead(lead_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/api/v1/leads/{lead_id}/notes")
-def update_lead_notes(
-    lead_id: int,
-    notes_data: dict,
-    db: Session = Depends(get_db)
-):
+def update_lead_progress(lead_id: int, data: dict, db: Session = Depends(get_db)):
+    """
+    Memperbarui progres lead termasuk catatan dan status.
+    """
     db_lead = crud.get_lead_by_id(db, lead_id=lead_id)
     if not db_lead:
         raise HTTPException(status_code=404, detail="Lead not found")
-
-    db_lead.notes = notes_data.get("notes")
+    
+    # Update catatan jika ada
+    if "notes" in data:
+        db_lead.notes = data.get("notes")
+    
+    # Update status jika ada
+    if "status" in data:
+        db_lead.status = data.get("status")
+        
     db.commit()
-    return {"status": "success", "message": "Note saved"}
+    return {"status": "success", "message": "Progress updated"}
+
+
+@app.delete("/api/v1/leads/all")
+def clear_leads_database(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    success = crud.delete_all_leads(db)
+    if not success:
+        raise HTTPException(status_code=500, detail="Gagal mengosongkan database")
+    
+    return {"status": "success", "message": "Seluruh data leads berhasil dihapus"}
+
+# --- ENDPOINT BULK ACTIONS ---
+
+@app.post("/api/v1/leads/bulk-delete")
+def bulk_delete(
+    request: BulkActionRequest, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    success = crud.bulk_delete_leads(db, request.lead_ids)
+    if not success:
+        raise HTTPException(status_code=500, detail="Gagal menghapus data massal")
+    return {"message": f"Berhasil menghapus {len(request.lead_ids)} data"}
+
+@app.post("/api/v1/leads/bulk-status")
+def bulk_status_update(
+    request: BulkActionRequest, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    if not request.status:
+        raise HTTPException(status_code=400, detail="Status diperlukan")
+    success = crud.bulk_update_status(db, request.lead_ids, request.status)
+    if not success:
+        raise HTTPException(status_code=500, detail="Gagal memperbarui status massal")
+    return {"message": f"Berhasil memperbarui {len(request.lead_ids)} data ke status {request.status}"}
 
 # =====================================================
 # DASHBOARD
@@ -226,19 +279,3 @@ def login(
         "access_token": access_token,
         "token_type": "bearer"
     }
-
-# Tambahkan di bagian bawah main.py
-@app.delete("/api/v1/leads/all")
-def clear_leads_database(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(get_current_user)
-):
-    """
-    Menghapus seluruh data nasabah (leads) dari database.
-    Hanya bisa diakses oleh pengguna terautentikasi.
-    """
-    success = crud.delete_all_leads(db)
-    if not success:
-        raise HTTPException(status_code=500, detail="Gagal mengosongkan database")
-    
-    return {"status": "success", "message": "Seluruh data leads berhasil dihapus"}

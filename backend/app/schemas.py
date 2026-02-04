@@ -28,6 +28,7 @@ class LeadBase(BaseModel):
     
     balance: Optional[float] = 0.0
     notes: Optional[str] = None
+    status: Optional[str] = "New"
 
 # Schema untuk Create (sama dengan Base)
 class LeadCreate(LeadBase):

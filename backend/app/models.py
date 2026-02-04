@@ -34,6 +34,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, index=True)
+    status = Column(String, default="New")
     
     # Client demographics
     age = Column(Integer)
