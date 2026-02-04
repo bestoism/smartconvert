@@ -8,12 +8,16 @@ import {
   UserCircle, 
   LogOut, 
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  BrainCircuit,
+  Zap
 } from 'lucide-react';
 
 const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Leads Data', href: '/dashboard/leads', icon: Users },
+  { name: 'AI Model Lab', href: '/dashboard/ai-lab', icon: BrainCircuit },
+  { name: 'AI Simulator', href: '/dashboard/simulator', icon: Zap }, // MENU BARU
   { name: 'My Profile', href: '/dashboard/profile', icon: UserCircle },
 ];
 

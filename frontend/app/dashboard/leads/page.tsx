@@ -15,24 +15,21 @@ export default function LeadsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [foundCount, setFoundCount] = useState(0);
   
-  // --- STATE SELECTION ---
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  
-  // --- TABLE CONTROL ---
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState('newest');
   const [uploading, setUploading] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  // Filter States
+  // --- FILTER STATES ---
   const [filterJob, setFilterJob] = useState('');
   const [filterMinScore, setFilterMinScore] = useState('');
   const [filterMinAge, setFilterMinAge] = useState('');
+  const [filterStatus, setFilterStatus] = useState(''); // State Baru
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. Fungsi Ambil Data
   const fetchLeads = async () => {
     setLoading(true);
     try {
@@ -40,6 +37,7 @@ export default function LeadsPage() {
       if (filterJob) query += `&job=${filterJob}`;
       if (filterMinScore) query += `&min_score=${Number(filterMinScore) / 100}`;
       if (filterMinAge) query += `&min_age=${filterMinAge}`;
+      if (filterStatus) query += `&status=${filterStatus}`; // Tambahkan ke query API
 
       const res = await api.get(query);
       setLeads(res.data.data); 
@@ -54,11 +52,11 @@ export default function LeadsPage() {
     }
   };
 
-  // 2. Fungsi Reset Filter (YANG TADI HILANG)
   const resetFilters = () => {
     setFilterJob('');
     setFilterMinScore('');
     setFilterMinAge('');
+    setFilterStatus(''); // Reset status
     setSortBy('newest');
     setPage(0);
     setSelectedIds([]);
@@ -67,48 +65,32 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchLeads();
     setSelectedIds([]); 
-  }, [page, limit, sortBy, filterJob, filterMinScore, filterMinAge]);
+  }, [page, limit, sortBy, filterJob, filterMinScore, filterMinAge, filterStatus]);
 
-  // 3. Fungsi Upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append('file', file);
-
     setUploading(true);
     try {
-      await api.post('/upload-csv', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/upload-csv', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       alert("Batch Data Berhasil Diunggah!");
       setPage(0);
       fetchLeads();
-    } catch (err) {
-      alert("Gagal mengunggah file. Pastikan format CSV benar.");
-    } finally {
-      setUploading(false);
-      if (e.target) e.target.value = '';
-    }
+    } catch (err) { alert("Gagal mengunggah file."); }
+    finally { setUploading(false); if (e.target) e.target.value = ''; }
   };
 
-  // --- LOGIKA SELEKSI ---
   const toggleSelectAll = () => {
-    if (selectedIds.length === leads.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(leads.map(l => l.id));
-    }
+    if (selectedIds.length === leads.length) { setSelectedIds([]); } 
+    else { setSelectedIds(leads.map(l => l.id)); }
   };
 
   const toggleSelectOne = (id: number) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
 
-  // --- LOGIKA BULK ACTIONS ---
   const handleBulkDelete = async () => {
     if (!confirm(`Hapus ${selectedIds.length} data secara permanen?`)) return;
     setIsBulkProcessing(true);
@@ -116,7 +98,7 @@ export default function LeadsPage() {
       await api.post('/leads/bulk-delete', { lead_ids: selectedIds });
       alert("Data berhasil dihapus.");
       fetchLeads();
-    } catch (err) { alert("Gagal menghapus data massal."); }
+    } catch (err) { alert("Gagal menghapus data."); }
     finally { setIsBulkProcessing(false); }
   };
 
@@ -124,13 +106,12 @@ export default function LeadsPage() {
     setIsBulkProcessing(true);
     try {
       await api.post('/leads/bulk-status', { lead_ids: selectedIds, status: newStatus });
-      alert(`Berhasil memperbarui ${selectedIds.length} data ke status: ${newStatus}`);
+      alert(`Berhasil memperbarui ${selectedIds.length} data.`);
       fetchLeads();
-    } catch (err) { alert("Gagal memperbarui status massal."); }
+    } catch (err) { alert("Gagal memperbarui status."); }
     finally { setIsBulkProcessing(false); }
   };
 
-  // Helper Style
   const getPotentialStyle = (label: string) => {
     if (label === 'High Potential') return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
     if (label === 'Medium Potential') return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
@@ -164,7 +145,6 @@ export default function LeadsPage() {
              <span className="bg-emerald-500 text-slate-950 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black">{selectedIds.length}</span>
              <p className="text-xs font-bold uppercase tracking-widest text-emerald-500">Selected</p>
           </div>
-          
           <div className="flex items-center gap-2">
              <button onClick={() => handleBulkStatusUpdate('In Progress')} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">Set In Progress</button>
              <button onClick={() => handleBulkStatusUpdate('Interested')} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">Set Interested</button>
@@ -181,7 +161,7 @@ export default function LeadsPage() {
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-white">
             <Users className="text-emerald-500" size={24} /> Database Leads
           </h1>
-          <p className="text-slate-500 text-sm font-light mt-1">Ditemukan {foundCount.toLocaleString()} data nasabah potensial.</p>
+          <p className="text-slate-500 text-sm font-light mt-1">Ditemukan {foundCount.toLocaleString()} data nasabah.</p>
         </div>
         <div className="flex gap-2">
             <button onClick={resetFilters} className="p-2 text-slate-500 hover:text-white transition-colors" title="Reset Filters"><RotateCcw size={20}/></button>
@@ -192,8 +172,8 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* FILTER BAR */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* --- FILTER BAR (5 KOLOM SEKARANG) --- */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-5 gap-6">
           <div className="space-y-1">
             <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Pekerjaan</label>
             <select value={filterJob} onChange={(e) => {setFilterJob(e.target.value); setPage(0);}} className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 outline-none focus:border-emerald-500 transition-all">
@@ -203,6 +183,17 @@ export default function LeadsPage() {
               <option value="retired">Retired</option>
               <option value="student">Student</option>
               <option value="technician">Technician</option>
+            </select>
+          </div>
+          {/* --- FILTER STATUS BARU --- */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Status Alur Kerja</label>
+            <select value={filterStatus} onChange={(e) => {setFilterStatus(e.target.value); setPage(0);}} className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 outline-none focus:border-emerald-500 transition-all">
+              <option value="">Semua Status</option>
+              <option value="New">New</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Interested">Interested</option>
+              <option value="Rejected">Rejected</option>
             </select>
           </div>
           <div className="space-y-1">
@@ -223,7 +214,7 @@ export default function LeadsPage() {
           </div>
       </div>
 
-      {/* TABLE */}
+      {/* TABLE DATA */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -243,9 +234,9 @@ export default function LeadsPage() {
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {loading ? (
-                <tr><td colSpan={6} className="py-32 text-center text-xs font-mono text-slate-600 uppercase tracking-[0.3em] animate-pulse">Syncing Records...</td></tr>
+                <tr><td colSpan={6} className="py-32 text-center text-xs font-mono text-slate-600 uppercase tracking-[0.3em] animate-pulse">Filtering Data...</td></tr>
               ) : leads.length === 0 ? (
-                <tr><td colSpan={6} className="py-32 text-center text-xs text-slate-500 italic">No matches found.</td></tr>
+                <tr><td colSpan={6} className="py-32 text-center text-xs text-slate-500 italic">No matches found for current status filter.</td></tr>
               ) : (
                 leads.map((lead) => (
                   <tr key={lead.id} className={`hover:bg-white/[0.02] transition-colors group ${selectedIds.includes(lead.id) ? 'bg-emerald-500/[0.03]' : ''}`}>
@@ -262,8 +253,7 @@ export default function LeadsPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest ${getWorkflowStyle(lead.status)}`}>
-                        {getStatusIcon(lead.status)}
-                        {lead.status || 'New'}
+                        {getStatusIcon(lead.status)} {lead.status || 'New'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -273,17 +263,9 @@ export default function LeadsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3 w-36">
-                        <span className="text-xs font-mono font-bold text-slate-400 w-8 text-right">
-                          {(lead.prediction_score * 100).toFixed(0)}%
-                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-400 w-8 text-right">{(lead.prediction_score * 100).toFixed(0)}%</span>
                         <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-1000 ${
-                              lead.prediction_score > 0.7 ? 'bg-emerald-500' : 
-                              lead.prediction_score > 0.3 ? 'bg-amber-500' : 'bg-rose-500'
-                            }`}
-                            style={{ width: `${lead.prediction_score * 100}%` }}
-                          />
+                          <div className={`h-full transition-all duration-1000 ${lead.prediction_score > 0.7 ? 'bg-emerald-500' : lead.prediction_score > 0.3 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${lead.prediction_score * 100}%` }} />
                         </div>
                       </div>
                     </td>
@@ -300,7 +282,7 @@ export default function LeadsPage() {
         </div>
 
         {/* PAGINATION */}
-        <div className="bg-slate-950/30 px-6 py-5 border-t border-slate-800 flex justify-between items-center">
+        <div className="bg-slate-950/30 px-6 py-5 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Showing {startRange}-{endRange} of {foundCount.toLocaleString()} Results</p>
           <div className="flex items-center gap-4">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="p-2 border border-slate-800 rounded-lg text-slate-500 hover:bg-slate-800 disabled:opacity-20 transition-all"><ChevronLeft size={16} /></button>

@@ -140,6 +140,7 @@ def read_leads(
     min_age: Optional[int] = None, 
     max_age: Optional[int] = None, 
     min_score: Optional[float] = None,
+    status: Optional[str] = None, # Parameter baru
     db: Session = Depends(get_db)
 ):
     """
@@ -147,7 +148,8 @@ def read_leads(
     """
     total, data = crud.get_leads(
         db, skip=skip, limit=limit, sort_by=sort_by, 
-        job=job, min_age=min_age, max_age=max_age, min_score=min_score
+        job=job, min_age=min_age, max_age=max_age, 
+        min_score=min_score, status=status # Kirim status ke CRUD
     )
     
     return {"total_found": total, "data": data}
@@ -279,3 +281,33 @@ def login(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+@app.get("/api/v1/ai/insights")
+def read_ai_insights(current_user: models.User = Depends(get_current_user)):
+    return crud.get_ai_model_insights()
+
+# Tambahkan endpoint ini di bagian paling bawah main.py
+@app.post("/api/v1/ai/simulate")
+def simulate_prediction(
+    data: dict, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Simulator AI: Menerima input fitur secara manual dan mengembalikan 
+    prediksi serta penjelasan SHAP secara real-time.
+    """
+    try:
+        # 1. Jalankan Prediksi
+        prediction = ml_service.predict(data)
+        
+        # 2. Jalankan Penjelasan SHAP (XAI)
+        explanation = ml_service.explain_prediction(data)
+        
+        return {
+            "score": prediction.get("score"),
+            "label": prediction.get("label"),
+            "explanation": explanation
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")

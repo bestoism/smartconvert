@@ -20,11 +20,11 @@ def create_lead(db: Session, lead_data: dict, prediction: dict):
 # 2. Ambil List Leads (Dengan Logika Filtering, Pagination, & Total Count)
 def get_leads(db: Session, skip: int = 0, limit: int = 100, sort_by: str = "newest", 
               job: str = None, min_age: int = None, max_age: int = None, 
-              min_score: float = None):
+              min_score: float = None, status: str = None): # Tambah parameter status
     
     query = db.query(models.Lead)
     
-    # Terapkan Filter
+    # --- LOGIKA FILTERING ---
     if job:
         query = query.filter(models.Lead.job == job)
     if min_age is not None:
@@ -33,11 +33,13 @@ def get_leads(db: Session, skip: int = 0, limit: int = 100, sort_by: str = "newe
         query = query.filter(models.Lead.age <= max_age)
     if min_score is not None:
         query = query.filter(models.Lead.prediction_score >= min_score)
+    if status: # Tambah filter status di sini
+        query = query.filter(models.Lead.status == status)
 
-    # Hitung TOTAL hasil filter
+    # Hitung TOTAL hasil filter (sebelum skip & limit)
     filtered_count = query.count()
 
-    # Terapkan Sorting
+    # --- LOGIKA SORTING ---
     if sort_by == "score_high":
         query = query.order_by(models.Lead.prediction_score.desc())
     elif sort_by == "score_low":
@@ -47,6 +49,7 @@ def get_leads(db: Session, skip: int = 0, limit: int = 100, sort_by: str = "newe
     else:
         query = query.order_by(models.Lead.id.desc())
         
+    # Ambil data dengan pagination
     data = query.offset(skip).limit(limit).all()
 
     return filtered_count, data 
@@ -232,3 +235,29 @@ def delete_all_leads(db: Session):
     except Exception:
         db.rollback()
         return False
+    
+def get_ai_model_insights():
+    # Metrik ini diambil dari hasil evaluasi Model V2 kamu
+    # Ini menunjukkan transparansi performa kepada Admin
+    return {
+        "model_name": "XGBoost Classifier v2.0",
+        "last_trained": "2026-01-03",
+        "metrics": {
+            "accuracy": 0.8537,
+            "precision": 0.4064,
+            "recall": 0.6476,
+            "f1_score": 0.4994
+        },
+        "feature_importance": [
+            {"name": "nr.employed", "impact": 0.52, "type": "Economic"},
+            {"name": "euribor3m", "impact": 0.14, "type": "Economic"},
+            {"name": "contact_telephone", "impact": 0.12, "type": "Campaign"},
+            {"name": "cons.conf.idx", "impact": 0.11, "type": "Economic"},
+            {"name": "pernah_dihubungi", "impact": 0.08, "type": "History"},
+            {"name": "age", "impact": 0.04, "type": "Demographic"}
+        ],
+        "thresholds": {
+            "high": 0.70,
+            "medium": 0.31
+        }
+    }
