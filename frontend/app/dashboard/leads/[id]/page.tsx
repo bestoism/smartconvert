@@ -9,9 +9,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+// Import useToast
+import { useToast } from '@/components/Toast';
 
 export default function LeadDetailPage() {
   const { id } = useParams();
+  const { showToast } = useToast(); // Inisialisasi Toast
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
@@ -28,6 +31,7 @@ export default function LeadDetailPage() {
       setStatus(res.data.status || "New");
     } catch (err) {
       console.error(err);
+      showToast("Gagal mengambil detail data nasabah.", "error");
     } finally {
       setLoading(false);
     }
@@ -40,10 +44,10 @@ export default function LeadDetailPage() {
     setIsUpdatingStatus(true);
     try {
       await api.put(`/leads/${id}/notes`, { status: status });
-      alert("Status nasabah berhasil diperbarui!");
+      showToast("Status nasabah berhasil diperbarui ke: " + status, "success");
       fetchData();
     } catch (err) {
-      alert("Gagal memperbarui status.");
+      showToast("Gagal memperbarui status.", "error");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -54,10 +58,10 @@ export default function LeadDetailPage() {
     setIsSavingNote(true);
     try {
       await api.put(`/leads/${id}/notes`, { notes: note });
-      alert("Catatan sales berhasil disimpan!");
+      showToast("Catatan dokumentasi berhasil disimpan ke database.", "success");
       fetchData();
     } catch (err) {
-      alert("Gagal menyimpan catatan.");
+      showToast("Gagal menyimpan catatan sales.", "error");
     } finally {
       setIsSavingNote(false);
     }
@@ -90,7 +94,7 @@ export default function LeadDetailPage() {
           Back to Database
         </Link>
         <div className="text-[10px] font-mono text-slate-700 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
-           System Verified • Real-time Data
+            System Verified • Real-time Data
         </div>
       </div>
 
@@ -201,7 +205,7 @@ export default function LeadDetailPage() {
                 <div>
                    <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2">Next Best Conversation</h4>
                    <p className="text-sm text-slate-300 leading-relaxed font-medium italic">
-                      "{lead.explanation?.recommendation || "Gali kebutuhan nasabah secara umum."}"
+                     "{lead.explanation?.recommendation || "Gali kebutuhan nasabah secara umum."}"
                    </p>
                 </div>
              </div>

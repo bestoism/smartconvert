@@ -1,29 +1,46 @@
-import axios from 'axios';
+import axios, { 
+  InternalAxiosRequestConfig, 
+  AxiosResponse, 
+  AxiosError 
+} from 'axios';
 
 const api = axios.create({
-  // Sesuaikan dengan URL Backend kamu (Hugging Face atau Localhost)
+  // NEXT_PUBLIC_ wajib digunakan agar variable bisa dibaca di sisi browser oleh Next.js
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor untuk menangani token & error 401
-api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Interceptor Request: Menambahkan Token ke Header secara otomatis
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Pastikan kita berada di browser sebelum mengakses localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
+// Interceptor Response: Menangani error 401 (Unauthorized) secara global
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: AxiosResponse) => {
+    return response;
+  },
+  (error: AxiosError) => {
+    // Jika token tidak valid atau expired
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        localStorage.removeItem('user');
+        // Gunakan window.location.replace agar user tidak bisa klik 'back' ke halaman terproteksi
+        window.location.replace('/login');
       }
     }
     return Promise.reject(error);

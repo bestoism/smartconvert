@@ -8,8 +8,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+// Import useToast
+import { useToast } from '@/components/Toast';
 
 export default function LeadsPage() {
+  const { showToast } = useToast(); // Inisialisasi Toast
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -26,7 +29,7 @@ export default function LeadsPage() {
   const [filterJob, setFilterJob] = useState('');
   const [filterMinScore, setFilterMinScore] = useState('');
   const [filterMinAge, setFilterMinAge] = useState('');
-  const [filterStatus, setFilterStatus] = useState(''); // State Baru
+  const [filterStatus, setFilterStatus] = useState(''); 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,7 +40,7 @@ export default function LeadsPage() {
       if (filterJob) query += `&job=${filterJob}`;
       if (filterMinScore) query += `&min_score=${Number(filterMinScore) / 100}`;
       if (filterMinAge) query += `&min_age=${filterMinAge}`;
-      if (filterStatus) query += `&status=${filterStatus}`; // Tambahkan ke query API
+      if (filterStatus) query += `&status=${filterStatus}`; 
 
       const res = await api.get(query);
       setLeads(res.data.data); 
@@ -47,6 +50,7 @@ export default function LeadsPage() {
       setTotalCount(statsRes.data.total_leads);
     } catch (err) {
       console.error("Fetch error:", err);
+      showToast("Gagal mengambil data dari server.", "error");
     } finally {
       setLoading(false);
     }
@@ -56,7 +60,7 @@ export default function LeadsPage() {
     setFilterJob('');
     setFilterMinScore('');
     setFilterMinAge('');
-    setFilterStatus(''); // Reset status
+    setFilterStatus(''); 
     setSortBy('newest');
     setPage(0);
     setSelectedIds([]);
@@ -75,10 +79,12 @@ export default function LeadsPage() {
     setUploading(true);
     try {
       await api.post('/upload-csv', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      alert("Batch Data Berhasil Diunggah!");
+      showToast("Batch Data Berhasil Diunggah!", "success");
       setPage(0);
       fetchLeads();
-    } catch (err) { alert("Gagal mengunggah file."); }
+    } catch (err) { 
+      showToast("Gagal mengunggah file. Cek format CSV Anda.", "error"); 
+    }
     finally { setUploading(false); if (e.target) e.target.value = ''; }
   };
 
@@ -96,9 +102,11 @@ export default function LeadsPage() {
     setIsBulkProcessing(true);
     try {
       await api.post('/leads/bulk-delete', { lead_ids: selectedIds });
-      alert("Data berhasil dihapus.");
+      showToast("Data massal berhasil dihapus secara permanen.", "success");
       fetchLeads();
-    } catch (err) { alert("Gagal menghapus data."); }
+    } catch (err) { 
+      showToast("Gagal memproses penghapusan massal.", "error"); 
+    }
     finally { setIsBulkProcessing(false); }
   };
 
@@ -106,9 +114,11 @@ export default function LeadsPage() {
     setIsBulkProcessing(true);
     try {
       await api.post('/leads/bulk-status', { lead_ids: selectedIds, status: newStatus });
-      alert(`Berhasil memperbarui ${selectedIds.length} data.`);
+      showToast(`Berhasil memperbarui ${selectedIds.length} data nasabah.`, "success");
       fetchLeads();
-    } catch (err) { alert("Gagal memperbarui status."); }
+    } catch (err) { 
+      showToast("Gagal memperbarui status massal.", "error"); 
+    }
     finally { setIsBulkProcessing(false); }
   };
 
@@ -172,7 +182,7 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* --- FILTER BAR (5 KOLOM SEKARANG) --- */}
+      {/* FILTER BAR */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-5 gap-6">
           <div className="space-y-1">
             <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Pekerjaan</label>
@@ -185,7 +195,6 @@ export default function LeadsPage() {
               <option value="technician">Technician</option>
             </select>
           </div>
-          {/* --- FILTER STATUS BARU --- */}
           <div className="space-y-1">
             <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Status Alur Kerja</label>
             <select value={filterStatus} onChange={(e) => {setFilterStatus(e.target.value); setPage(0);}} className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 outline-none focus:border-emerald-500 transition-all">
