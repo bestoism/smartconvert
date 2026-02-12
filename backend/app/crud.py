@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from . import models, schemas
-from datetime import datetime
+from datetime import datetime, timezone
 from . import auth
 from typing import List
 
@@ -162,8 +162,15 @@ def get_user_profile(db: Session, user_id: int):
     
     total_leads = db.query(models.Lead).count()
     high_leads = db.query(models.Lead).filter(models.Lead.prediction_label == "High Potential").count()
+    
+    # REVISI: Hitung Active Days dengan menyamakan zona waktu ke UTC
     first_lead = db.query(models.Lead).order_by(models.Lead.created_at.asc()).first()
-    active_days = (datetime.now() - first_lead.created_at).days + 1 if first_lead else 0
+    if first_lead:
+        now = datetime.now(timezone.utc)
+        active_days = (now - first_lead.created_at).days + 1
+    else:
+        active_days = 0
+
     recent_leads = db.query(models.Lead).order_by(models.Lead.updated_at.desc()).limit(5).all()
     
     activities = []
