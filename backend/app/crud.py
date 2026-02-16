@@ -267,4 +267,4 @@ def get_ai_model_insights():
             "high": 0.70,
             "medium": 0.31
         }
-    }
+    }   
