@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import Navbar from '@/components/Navbar';
 import { 
   ArrowRight, 
@@ -20,23 +21,30 @@ export default function LandingPage() {
   const [progress, setProgress] = useState(0);
 
   // --- LOGIKA MEMBANGUNKAN SERVER HUGGING FACE ---
-  useEffect(() => {
+useEffect(() => {
     let progressInterval: NodeJS.Timeout;
 
     const wakeUpServer = async () => {
       try {
-        // Mengetuk root endpoint backend
-        await api.get('/'); 
+        // Ambil URL dasar (Hapus /api/v1 nya)
+        const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+        const rootUrl = rawUrl.replace('/api/v1', ''); 
+
+        // Kita tembak root URL-nya langsung
+        await axios.get(rootUrl); 
+        
         setIsServerAwake(true);
-        // Beri jeda sedikit setelah bangun agar transisinya smooth
         setTimeout(() => setIsChecking(false), 1000);
         setProgress(100);
       } catch (error) {
-        console.log("Server is sleeping... attempting to wake up...");
+        // Jika server tidur, dia akan error, tapi tembakan ini tetap membangunkannya
+        console.log("Infrastructure is warming up...");
       }
     };
 
     wakeUpServer();
+    
+    // ... sisa kode interval progress bar tetap sama ...
 
     // Simulasi progress bar (HF biasanya butuh 15-30 detik untuk boot)
     progressInterval = setInterval(() => {
