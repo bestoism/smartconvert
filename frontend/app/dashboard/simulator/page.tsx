@@ -60,7 +60,7 @@ export default function SimulatorPage() {
   const score = result ? Math.round(result.score * 100) : 0;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20 text-slate-100">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20 text-slate-100 pt-15 lg:pt-0">
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>

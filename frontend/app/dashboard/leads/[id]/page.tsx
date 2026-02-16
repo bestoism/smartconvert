@@ -86,7 +86,7 @@ export default function LeadDetailPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-6 animate-in fade-in duration-700 pb-20 pt-15 lg:pt-0">
       {/* NAVIGATION BAR */}
       <div className="flex items-center justify-between">
         <Link href="/dashboard/leads" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-500 transition-colors group">

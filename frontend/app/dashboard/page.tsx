@@ -8,9 +8,9 @@ import {
   AlertCircle, 
   BarChart3, 
   Globe, 
-  RefreshCw, 
   Table as TableIcon,
-  PieChart as PieIcon // Alias ditambahkan di sini untuk ikon
+  PieChart as PieIcon,
+  Loader2
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// --- Komponen Stat Card (Top Row) ---
+// --- Komponen Stat Card ---
 function StatCard({ label, value, icon: Icon, colorClass, help }: any) {
   return (
     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all group">
@@ -58,7 +58,7 @@ function StatCard({ label, value, icon: Icon, colorClass, help }: any) {
 // --- Komponen Flippable Chart Card ---
 function FlippableCard({ title, icon: Icon, description, children, dataView, isFlipped, onToggle, colorClass }: any) {
   return (
-    <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl relative group transition-all duration-300">
+    <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl relative group transition-all duration-300">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h4 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
@@ -69,7 +69,6 @@ function FlippableCard({ title, icon: Icon, description, children, dataView, isF
         <button 
           onClick={onToggle}
           className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
-          title="Toggle View"
         >
           {isFlipped ? <BarChart3 size={16} /> : <TableIcon size={16} />}
         </button>
@@ -81,12 +80,12 @@ function FlippableCard({ title, icon: Icon, description, children, dataView, isF
             {children}
           </div>
         ) : (
-          <div className="w-full h-full overflow-y-auto animate-in zoom-in-95 duration-300 pr-2">
+          <div className="w-full h-full overflow-y-auto animate-in zoom-in-95 duration-300 pr-2 custom-scrollbar">
             <table className="w-full text-left">
-              <thead className="sticky top-0 bg-slate-900">
+              <thead className="sticky top-0 bg-slate-900 shadow-sm">
                 <tr className="border-b border-slate-800">
                   <th className="py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kategori</th>
-                  <th className="py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Leads</th>
+                  <th className="py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -137,23 +136,26 @@ export default function DashboardPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-      <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-      <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.3em]">Synchronizing Engine...</p>
+      <Loader2 className="animate-spin text-emerald-500" size={40} />
+      <p className="text-slate-500 font-mono text-xs uppercase tracking-widest">Synchronizing Engine...</p>
     </div>
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+    // PERBAIKAN: Tambahkan pt-24 di mobile (base) agar tidak tertimpa Navbar (h-16)
+    // Gunakan lg:pt-0 karena di desktop sidebar berada di samping, bukan di atas.
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 pt-15 lg:pt-0">
+      
       {/* HEADER */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 px-2">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Executive Dashboard</h1>
-          <p className="text-slate-500 font-light mt-1 text-sm">
-            Operational Intelligence Engine <span className="text-emerald-500/50">v2.0.4-stable</span>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Executive Dashboard</h1>
+          <p className="text-slate-500 font-light mt-1 text-xs md:text-sm">
+            Operational Intelligence Engine <span className="text-emerald-500/50 font-mono italic">v2.0.4-stable</span>
           </p>
         </div>
         <div className="hidden md:block text-right">
-            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">System Status</p>
+            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Security Status</p>
             <p className="text-xs text-emerald-500 font-bold flex items-center gap-2 justify-end">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Live Production
             </p>
@@ -161,7 +163,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 1. KPI GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard label="Total Leads" value={stats?.total_leads} icon={Users} colorClass="text-blue-400" />
         <StatCard label="High Potential" value={stats?.high_potential} help="Ready to call" icon={TrendingUp} colorClass="text-emerald-400" />
         <StatCard label="Medium Potential" value={stats?.medium_potential} icon={Activity} colorClass="text-yellow-400" />
@@ -215,7 +217,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 3. DEMOGRAPHICS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <FlippableCard 
           title="Age Groups"
           icon={Users}
@@ -236,7 +238,7 @@ export default function DashboardPage() {
 
         <FlippableCard 
           title="Education"
-          icon={PieIcon} // Ikon alias digunakan di sini
+          icon={PieIcon}
           colorClass="text-purple-500"
           description="Lead count by education level."
           isFlipped={flipped.edu}
@@ -280,19 +282,19 @@ export default function DashboardPage() {
       </div>
 
       {/* 4. ECONOMIC CONTEXT SUMMARY */}
-      <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl border-t-4 border-t-orange-500 shadow-xl">
+      <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl border-t-4 border-t-orange-500 shadow-xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h4 className="text-white font-bold text-sm flex items-center gap-2">
               <Globe size={16} className="text-orange-500"/> Economic Climate Context
             </h4>
-            <p className="text-xs text-slate-500 font-light mt-1">Euribor 3M Interest Rate distribution in current batch.</p>
+            <p className="text-xs text-slate-500 font-light mt-1 text-[11px]">Euribor 3M Interest Rate distribution in current batch.</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
             {stats?.econ_dist?.map((item: any) => (
               <div key={item.name} className="animate-in fade-in duration-1000">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{item.name}</p>
-                <p className="text-2xl font-bold text-orange-400">{item.value.toLocaleString()}</p>
+                <p className="text-xl md:text-2xl font-bold text-orange-400">{item.value.toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -301,8 +303,8 @@ export default function DashboardPage() {
 
       {/* FOOTER INFO */}
       <div className="flex justify-center pt-10 border-t border-slate-900">
-        <p className="text-[10px] text-slate-600 uppercase tracking-[0.2em] font-bold">
-          © 2026 Data Infrastructure Analytics • Enterprise Deployment
+        <p className="text-[9px] md:text-[10px] text-slate-600 uppercase tracking-[0.2em] font-bold text-center">
+          © 2026 Data Infrastructure Analytics • Enterprise Deployment Mode
         </p>
       </div>
     </div>

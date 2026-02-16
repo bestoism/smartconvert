@@ -146,7 +146,7 @@ export default function LeadsPage() {
   const endRange = Math.min((page + 1) * limit, foundCount);
 
   return (
-    <div className="relative space-y-6 animate-in fade-in duration-500 pb-24 text-slate-100">
+    <div className="relative space-y-6 animate-in fade-in duration-500 pb-24 text-slate-100 pt-15 lg:pt-0">
       
       {/* FLOATING ACTION BAR */}
       {selectedIds.length > 0 && (
