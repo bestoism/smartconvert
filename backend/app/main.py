@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy import text  # Tambahan import sesuai permintaan
 from typing import List, Optional
 import pandas as pd
 import io
@@ -45,6 +46,23 @@ class BulkActionRequest(schemas.BaseModel):
 @app.get("/")
 def read_root():
     return {"message": "SmartConvert API is running 🚀"}
+
+# =====================================================
+# INFRASTRUCTURE HEALTH CHECK
+# =====================================================
+
+@app.get("/api/v1/health-check")
+def health_check(db: Session = Depends(get_db)):
+    """
+    Endpoint otomatis untuk menjaga Supabase dan Hugging Face tetap bangun.
+    Melakukan query sederhana ke DB untuk mencatat aktivitas.
+    """
+    try:
+        # Melakukan query minimal untuk memberi tahu Supabase bahwa kita aktif
+        db.execute(text("SELECT 1"))
+        return {"status": "infrastructure_online", "database": "connected"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # =====================================================
 # AUTH & JWT DEPENDENCY
@@ -286,7 +304,7 @@ def login(
 def read_ai_insights(current_user: models.User = Depends(get_current_user)):
     return crud.get_ai_model_insights()
 
-# Tambahkan endpoint ini di bagian paling bawah main.py
+# AI Simulator Endpoint
 @app.post("/api/v1/ai/simulate")
 def simulate_prediction(
     data: dict, 
