@@ -2,14 +2,35 @@ name: Keep Alive Infrastructure
 
 on:
   schedule:
-    # Berjalan setiap 2 hari sekali jam 00:00 UTC
-    - cron: '0 */6 * * *'
-  workflow_dispatch: # Agar bisa dijalankan manual untuk tes
+    # Menjalankan setiap jam agar server HF & Supabase selalu standby
+    - cron: '0 * * * *'
+  workflow_dispatch: # Supaya bisa dijalankan manual
 
 jobs:
-  ping:
+  ping-and-stay-active:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Wajib agar robot bisa melakukan commit ke repo
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Ping SmartConvert API
         run: |
           curl -I https://bestoism-smartconvertapi.hf.space/api/v1/health-check
+
+      - name: Auto-Commit to keep repo active
+        # Langkah ini akan menulis tanggal sekarang ke heartbeat.txt
+        # Tapi hanya kita jalankan 1 kali dalam sebulan agar history git tidak penuh
+        # Kita gunakan logika: Jika hari ini tanggal 1, lakukan commit.
+        run: |
+          if [ "$(date +%d)" = "01" ]; then
+            date > heartbeat.txt
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add heartbeat.txt
+            git commit -m "chore: monthly activity heartbeat to prevent action disable [skip ci]"
+            git push
+          else
+            echo "Not the first of the month, skipping auto-commit."
+          fi
