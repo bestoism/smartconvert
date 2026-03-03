@@ -20,14 +20,14 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app.main:app", host="0.0.0.0", port=port)
 
-# Create Tables
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title="SmartConvert CRM API",
     description="Backend API with Batch Upload & Prediction Capability",
     version="1.0.0"
 )
+
+# PINDAHKAN INI KE SINI (Setelah FastAPI init agar lebih stabil)
+models.Base.metadata.create_all(bind=engine)
 
 # --- KONFIGURASI CORS ---
 app.add_middleware(
@@ -48,14 +48,14 @@ def read_root():
     return {"message": "SmartConvert API is running 🚀"}
 
 # =====================================================
-# INFRASTRUCTURE HEALTH CHECK
+# INFRASTRUCTURE HEALTH CHECK (REVISI: MENDUKUNG GET & HEAD)
 # =====================================================
 
-@app.get("/api/v1/health-check")
+@app.api_route("/api/v1/health-check", methods=["GET", "HEAD"])
 def health_check(db: Session = Depends(get_db)):
     """
     Endpoint otomatis untuk menjaga Supabase dan Hugging Face tetap bangun.
-    Melakukan query sederhana ke DB untuk mencatat aktivitas.
+    Mendukung GET dan HEAD untuk monitoring tool.
     """
     try:
         # Melakukan query minimal untuk memberi tahu Supabase bahwa kita aktif
