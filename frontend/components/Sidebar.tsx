@@ -13,7 +13,12 @@ import {
   BrainCircuit,
   Zap,
   Menu,
-  X
+  X,
+  Linkedin,
+  Globe,
+  ChevronUp,
+  ChevronDown,
+  User
 } from 'lucide-react';
 
 const menuItems = [
@@ -27,38 +32,36 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false); // State untuk Mobile Toggle
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDevDropdownOpen, setIsDevDropdownOpen] = useState(false); // State untuk Dropdown Developer
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // Gunakan replace agar history browser tentang 'dashboard' terhapus
     router.replace('/login');
-    // Force reload untuk memastikan semua state bersih
     setTimeout(() => window.location.reload(), 100);
   };
 
-  // Komponen Isi Menu (Agar tidak duplikasi kode antara desktop & mobile)
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
       <div className="p-6 border-b border-slate-900">
         <div className="flex items-center gap-2 text-emerald-500">
           <ShieldCheck size={24} />
-          <span className="text-xl font-bold tracking-tighter text-white">SMARTCONVERT</span>
+          <span className="text-xl font-bold tracking-tighter text-white uppercase">SmartConvert</span>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2 mt-4">
+      <nav className="flex-1 p-4 space-y-1 mt-4">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
-              onClick={() => setIsOpen(false)} // Tutup sidebar setelah klik di mobile
+              onClick={() => setIsOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all group ${
                 isActive 
-                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]' 
                 : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
               }`}
             >
@@ -70,12 +73,60 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-900">
+      {/* --- SECTION DEVELOPER & LOGOUT --- */}
+      <div className="p-4 border-t border-slate-900 space-y-2">
+        
+        {/* DEVELOPER DROPDOWN */}
+        <div className="relative">
+          <button 
+            onClick={() => setIsDevDropdownOpen(!isDevDropdownOpen)}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all duration-300 border ${
+              isDevDropdownOpen 
+              ? 'bg-slate-900 border-slate-700 shadow-lg' 
+              : 'hover:bg-slate-900 border-transparent'
+            }`}
+          >
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/20 shrink-0">
+               <User size={16} fill="currentColor" />
+            </div>
+            <div className="flex flex-col items-start overflow-hidden">
+               <span className="text-xs font-bold text-white truncate w-full">Ryan Besto</span>
+               <span className="text-[10px] text-slate-500 font-mono">Developer</span>
+            </div>
+            <div className="ml-auto text-slate-600">
+               {isDevDropdownOpen ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+            </div>
+          </button>
+
+          {/* Expanded Menu */}
+          {isDevDropdownOpen && (
+            <div className="mt-2 space-y-1 animate-in slide-in-from-bottom-2 duration-200">
+              <a 
+                href="https://www.linkedin.com/in/ryanbesto/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-400 hover:bg-blue-400/5 rounded-lg transition-all"
+              >
+                <Linkedin size={14} /> LinkedIn Profile
+              </a>
+              <a 
+                href="https://ryanbesto.me" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/5 rounded-lg transition-all"
+              >
+                <Globe size={14} /> Personal Website
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* LOGOUT BUTTON */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-rose-400 hover:bg-rose-500/5 hover:text-rose-300 rounded-lg transition-all"
+          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-rose-400 hover:bg-rose-500/5 hover:text-rose-300 rounded-lg transition-all group"
         >
-          <LogOut size={18} />
+          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
           Sign Out System
         </button>
       </div>
@@ -84,7 +135,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* --- MOBILE HEADER (Hanya muncul di layar kecil) --- */}
+      {/* --- MOBILE HEADER --- */}
       <div className="lg:hidden fixed top-0 w-full z-[60] bg-slate-950 border-b border-slate-900 h-16 flex items-center justify-between px-6">
         <div className="flex items-center gap-2 text-emerald-500">
           <ShieldCheck size={20} />
@@ -95,23 +146,20 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* --- DESKTOP SIDEBAR (Sembunyi di layar kecil) --- */}
+      {/* --- DESKTOP SIDEBAR --- */}
       <aside className="hidden lg:block w-64 bg-slate-950 border-r border-slate-900 h-screen sticky top-0">
         <SidebarContent />
       </aside>
 
-      {/* --- MOBILE DRAWER OVERLAY --- */}
+      {/* --- MOBILE DRAWER --- */}
       {isOpen && (
         <div className="lg:hidden fixed inset-0 z-[100] flex">
-          {/* Backdrop gelap transparan */}
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm" 
             onClick={() => setIsOpen(false)} 
           />
-          
-          {/* Menu Drawer dari kiri */}
           <div className="relative w-72 bg-slate-950 h-full shadow-2xl border-r border-slate-800 animate-in slide-in-from-left duration-300">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 z-10">
                <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-white">
                   <X size={24} />
                </button>
