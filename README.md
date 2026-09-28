@@ -1,154 +1,129 @@
-# 🚀 SmartConvert CRM | AI-Powered Predictive Analytics
+# SmartConvert CRM
+**Enterprise-Grade Predictive Lead Scoring & Operational Intelligence System**
 
-![SmartConvert Version](https://img.shields.io/badge/Version-2.0.4--stable-emerald)
-![Next.js](https://img.shields.io/badge/Frontend-Next.js_15-black?logo=next.js)
-![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)
-![XGBoost](https://img.shields.io/badge/AI_Engine-XGBoost-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+## Executive Summary
+SmartConvert CRM is an advanced, AI-driven Customer Relationship Management platform engineered specifically for the banking and financial sector. It transforms raw marketing and demographic data into actionable operational directives. By utilizing high-performance Machine Learning algorithms, the system predicts the conversion probability of potential leads for term deposit campaigns, effectively eliminating guesswork and optimizing resource allocation for sales departments.
 
-**SmartConvert CRM** is an advanced, enterprise-grade predictive Customer Relationship Management (CRM) system tailored for the banking sector. It transforms raw telemarketing campaign data into precise, actionable sales instructions using Machine Learning.
+## Core Capabilities
 
-By leveraging **XGBoost** for high-accuracy predictions and **SHAP (SHapley Additive exPlanations)** for AI transparency, this system helps sales teams identify high-conversion term deposit prospects *before* making the call.
+* **Predictive Lead Validation:** Powered by a highly tuned XGBoost Classifier (v2.0) that evaluates client demographics, economic indicators, and historical campaign data to categorize leads into High, Medium, and Low potential.
+* **Explainable AI (XAI):** Integrates SHAP (SHapley Additive exPlanations) to provide complete algorithmic transparency. It reveals the exact micro and macro factors influencing every AI decision, allowing sales representatives to tailor their conversations.
+* **Dynamic What-If Simulator:** A real-time sandbox environment for strategic managers to adjust economic parameters (e.g., Euribor 3M, Employment Rates) and observe predicted shifts in conversion probabilities instantly.
+* **Batch Processing & Bulk Operations:** Built to handle enterprise data loads. Users can upload bulk CSV files for automated data cleaning, normalization, and instantaneous ML inference.
+* **Executive Analytics Dashboard:** Offers a comprehensive, high-level overview of campaign performance, workforce activity logs, conversion tracking, and systemic health monitoring.
 
----
+## System Architecture
 
-## ✨ Key Features
+SmartConvert is built on a decoupled, modern architecture designed for scalability, security, and high performance.
 
-- 🧠 **Predictive Lead Scoring:** Automatically classifies leads into `High`, `Medium`, and `Low` potential using a tuned XGBoost v2.0 algorithm.
-- 🔍 **Explainable AI (XAI) with SHAP:** Provides complete transparency on *why* the AI made a decision (e.g., showing the positive impact of Euribor rates or the negative impact of specific job types).
-- 🎛️ **What-If AI Simulator:** An interactive sandbox for marketing managers to tweak economic and demographic parameters and see real-time probability changes.
-- 📂 **Batch CSV Processing:** Upload thousands of customer records via CSV for automated cleaning, feature engineering, and ML inference in seconds.
-- 📊 **Executive Dashboard:** Real-time analytics, demographic distributions, and AI confidence visualizations built with Recharts.
-- 🔐 **Enterprise Security:** JWT-based authentication, Bcrypt password hashing, and secure API routing.
-- 👥 **Sales Performance Tracking:** Individual profile tracking, daily targets, and live activity streams for sales representatives.
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend (User Interface)
-* **Framework:** Next.js 15 (App Router), React 19
+**Frontend Environment:**
+* **Framework:** Next.js 15 (App Router)
 * **Language:** TypeScript
 * **Styling:** Tailwind CSS v4
-* **Icons & Charts:** Lucide React, Recharts
-* **Data Fetching:** Axios (with automated JWT interceptors)
+* **Data Visualization:** Recharts
+* **State Management & Fetching:** Axios with Interceptor-based Auth Handling
 
-### Backend (API & Machine Learning)
-* **Framework:** FastAPI (Python 3.11)
-* **Machine Learning:** XGBoost, SHAP, Pandas, Numpy, Scikit-learn
-* **Database ORM:** SQLAlchemy
-* **Authentication:** Python-Jose (JWT), Passlib (Bcrypt)
+**Backend Infrastructure:**
+* **Gateway & API:** FastAPI (High-Performance Python framework)
+* **ORM & Database:** SQLAlchemy interfacing with PostgreSQL (or local SQLite for development)
+* **Authentication:** JSON Web Tokens (JWT) with Bcrypt password hashing
 * **Server:** Uvicorn (ASGI)
 
-### Infrastructure & Deployment
-* **Database:** PostgreSQL (Supabase / Neon) or SQLite (Local fallback)
-* **Containerization:** Docker (Backend optimized for Hugging Face Spaces / Render)
-* **CI/CD:** GitHub Actions (Automated Keep-Alive pings)
+**Machine Learning Engine:**
+* **Algorithm:** XGBoost (Extreme Gradient Boosting)
+* **Interpretability:** SHAP Kernels
+* **Data Integrity:** The model is explicitly engineered to mitigate Data Leakage (e.g., exclusion of post-facto features such as call duration) to ensure strict predictive validity.
 
----
+## Security & Compliance
+Security is embedded at the core of the infrastructure:
+* **Authorization:** Stateless JWT architecture with automatic session expiration.
+* **Data Protection:** Passwords and sensitive credentials are encrypted using industry-standard Bcrypt algorithms.
+* **Route Protection:** Middleware implementation across both frontend and backend to restrict unauthorized data access and enforce Role-Based constraints.
 
-## ⚙️ Local Setup & Installation
-
-### Prerequisites
-* Node.js (v18+)
-* Python (3.9 - 3.11)
-* Git
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/bestoism-smartconvert.git
-cd bestoism-smartconvert
-```
-
-### 2. Backend Setup (FastAPI)
-Navigate to the backend directory, set up a virtual environment, and install dependencies.
-```bash
-cd backend
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install requirements
-pip install -r requirements.txt
-```
-
-**Configure Backend Environment Variables:**
-Create a `.env` file inside the `/backend` folder:
-```ini
-# backend/.env
-DATABASE_URL=sqlite:///./crm.db  # Or your PostgreSQL connection string
-SECRET_KEY=your_super_secret_key_here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-PORT=8000
-```
-
-**Run the Backend Server:**
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-*The API will be running at `http://localhost:8000`*
-
-### 3. Frontend Setup (Next.js)
-Open a new terminal and navigate to the frontend directory.
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-# or yarn install / pnpm install
-```
-
-**Configure Frontend Environment Variables:**
-Create a `.env.local` file inside the `/frontend` folder:
-```ini
-# frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-**Run the Frontend Development Server:**
-```bash
-npm run dev
-```
-*The Web App will be running at `http://localhost:3000`*
-
----
-
-## 📂 Project Architecture
+## Directory Structure
 
 ```text
-bestoism-smartconvert/
-├── backend/                  # FastAPI Backend Core
+SmartConvert-Next/
+├── backend/
 │   ├── app/
-│   │   ├── ml_service.py     # XGBoost & SHAP Inference logic
-│   │   ├── crud.py           # Database Operations
-│   │   ├── models.py         # SQLAlchemy DB Models
-│   │   └── main.py           # API Gateway & Routes
-│   ├── ml_assets/            # Pre-trained XGBoost Models & Features
-│   └── Dockerfile            # Production Docker configuration
-├── frontend/                 # Next.js Frontend Core
-│   ├── app/                  # App Router Pages (Dashboard, Leads, Lab)
-│   ├── components/           # Reusable UI (Sidebar, Navbar, Toast)
-│   └── lib/                  # Axios Interceptors & API Config
-└── .github/workflows/        # CI/CD & Cron Jobs
+│   │   ├── auth.py          # JWT & Security Logic
+│   │   ├── crud.py          # Database Operations & Queries
+│   │   ├── main.py          # API Gateway & Endpoints
+│   │   ├── ml_service.py    # XGBoost & SHAP Inference Engine
+│   │   ├── models.py        # SQLAlchemy Data Models
+│   │   └── schemas.py       # Pydantic Validation Schemas
+│   ├── ml_assets/           # Serialized Model (.pkl) & Feature Mapping (.json)
+│   ├── requirements.txt     # Python Dependencies
+│   └── Dockerfile           # Containerization configuration
+├── frontend/
+│   ├── app/                 # Next.js Application Router
+│   ├── components/          # Reusable UI Architecture
+│   ├── lib/                 # Global Utilities & API Config
+│   ├── package.json         # Node.js Dependencies
+│   └── tsconfig.json        # TypeScript Configuration
+└── .github/workflows/       # CI/CD & Automated Infrastructure Maintenance
 ```
 
+## Installation & Deployment
+
+### Prerequisites
+* Python 3.11+
+* Node.js 18+ (npm, yarn, or pnpm)
+* PostgreSQL (Optional, defaults to SQLite for immediate local testing)
+
+### Backend Setup
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install --no-cache-dir -r requirements.txt
+   ```
+4. Set up environment variables (`.env` file in the `backend` directory):
+   ```env
+   SECRET_KEY=your_secure_secret_key
+   ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=1440
+   DATABASE_URL=sqlite:///./crm.db
+   ```
+5. Initialize the server:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables (`.env.local` file in the `frontend` directory):
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+   ```
+4. Launch the development server:
+   ```bash
+   npm run dev
+   ```
+5. Access the interface via `http://localhost:3000`.
+
+## Docker Support
+The backend is fully containerized for production deployment. The provided `Dockerfile` leverages the official Python 3.11 image, ensuring a secure, non-root user environment suitable for cloud platforms (e.g., AWS, GCP, or Hugging Face Spaces).
+
+## Technical Documentation
+Detailed operational manuals and API documentation are integrated directly into the application. Once deployed, navigate to the `/documentation` route within the platform to review systemic structures, RESTful API endpoints, and Machine Learning configurations.
+
+## License
+Proprietary Software. All rights reserved.
+
 ---
-
-## 🤖 About the Machine Learning Model
-The core of this system is a carefully tuned **XGBoost Classifier v2.0**. 
-- **Data Integrity:** The model was trained with a strict anti-data-leakage policy. The `duration` feature (call duration) was completely removed, ensuring the AI predicts outcomes based strictly on data available *before* the call happens.
-- **Interpretability:** Integrated with `shap.TreeExplainer` to extract Global Feature Importance and Local SHAP Values, allowing the generation of "Next Best Conversation" prompts for sales reps.
-
----
-
-## 🛡️ License & Credits
-
-Designed and developed by **Ryan Besto Saragih** (2026).  
-This project is open-source under the [MIT License](LICENSE).
-
-If you find this repository helpful, feel free to leave a ⭐!
+**Developed and Architected by Ryan Besto Saragih**
